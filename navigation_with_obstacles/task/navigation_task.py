@@ -157,6 +157,13 @@ class NavigationWithObstaclesTask(BaseTask):
         self.logged_crash_rate = 0.0
         self.logged_exceed_rate = 0.0
 
+        # Per-step reward component means (for tensorboard)
+        self.logged_r_dist = 0.0
+        self.logged_r_speed = 0.0
+        self.logged_r_dir = 0.0
+        self.logged_r_angvel = 0.0
+        self.logged_r_perc = 0.0
+
         # Termination/truncation tensors
         # IMPORTANT: self.terminations is a SEPARATE tensor, NOT an alias of
         # obs_dict["crashes"]. obs_dict["crashes"] is the simulator's collision
@@ -346,6 +353,22 @@ class NavigationWithObstaclesTask(BaseTask):
         self.infos["success_rate"] = self.logged_success_rate
         self.infos["crash_rate"] = self.logged_crash_rate
         self.infos["exceed_rate"] = self.logged_exceed_rate
+
+        # Reward components (mean across progress envs)
+        self.infos["reward/r_dist"] = self.logged_r_dist
+        self.infos["reward/r_speed"] = self.logged_r_speed
+        self.infos["reward/r_dir"] = self.logged_r_dir
+        self.infos["reward/r_angvel"] = self.logged_r_angvel
+        self.infos["reward/r_perc"] = self.logged_r_perc
+
+        # Flight metrics (mean across all envs)
+        robot_pos = self.obs_dict["robot_position"]
+        disp = self.target_position - robot_pos
+        self.infos["metrics/dist_to_target"] = float(torch.norm(disp, dim=1).mean())
+        self.infos["metrics/v_horizontal"] = float(
+            torch.norm(self.obs_dict["robot_linvel"][:, :2], dim=1).mean()
+        )
+        self.infos["metrics/episode_length"] = float(self.sim_env.sim_steps.float().mean())
 
         # Update curriculum
         self.check_and_update_curriculum_level(
@@ -603,5 +626,12 @@ class NavigationWithObstaclesTask(BaseTask):
         r_perc = params["lambda_perc"] * (
             torch.abs(body_linvel[:, 1]) + torch.clamp(-body_linvel[:, 0], min=0.0)
         )
+
+        # Store component means for tensorboard
+        self.logged_r_dist = float(r_dist.mean())
+        self.logged_r_speed = float(r_speed.mean())
+        self.logged_r_dir = float(r_dir.mean())
+        self.logged_r_angvel = float(r_angvel.mean())
+        self.logged_r_perc = float(r_perc.mean())
 
         return r_dist + r_speed + r_dir + r_angvel + r_perc

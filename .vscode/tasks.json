@@ -106,6 +106,59 @@
             },
             "problemMatcher": [],
             "group": "test"
+        },
+        {
+            "label": "Train Navigation VAE ANN",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "-m", "navigation_with_obstacles.training.runner",
+                "--file=navigation_with_obstacles/training/ppo_navigation.yaml",
+                "--train",
+                "--num_envs=1024",
+                "--headless=True"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "group": "build"
+        },
+        {
+            "label": "Train Navigation (with checkpoint)",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "-m", "navigation_with_obstacles.training.runner",
+                "--file=navigation_with_obstacles/training/ppo_navigation.yaml",
+                "--train",
+                "--num_envs=1024",
+                "--headless=True",
+                "--checkpoint=${input:navCheckpoint}"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "group": "build"
+        },
+        {
+            "label": "Play Navigation",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "-m", "navigation_with_obstacles.training.runner",
+                "--file=navigation_with_obstacles/training/ppo_navigation.yaml",
+                "--play",
+                "--num_envs=64",
+                "--headless=False",
+                "--checkpoint=${input:navCheckpoint}"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "group": "test"
         }
     ],
     "inputs": [
@@ -118,6 +171,11 @@
             "id": "snnCheckpoint",
             "type": "promptString",
             "description": "Path to SNN checkpoint (e.g., runs/simple_hover_snn_xxx/nn/simple_hover_snn.pth)"
+        },
+        {
+            "id": "navCheckpoint",
+            "type": "promptString",
+            "description": "Path to Navigation checkpoint (e.g., runs/navigation_with_obstacles_xxx/nn/navigation_with_obstacles.pth)"
         }
     ]
 }

@@ -241,8 +241,10 @@ def update_config(config, args):
 # =============================================================================
 
 if __name__ == "__main__":
-    os.makedirs("nn", exist_ok=True)
-    os.makedirs("runs", exist_ok=True)
+    # Save runs/ under the navigation_with_obstacles folder
+    project_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    runs_dir = os.path.join(project_dir, "runs")
+    os.makedirs(runs_dir, exist_ok=True)
 
     args = vars(get_args())
     config_name = args["file"]
@@ -255,6 +257,9 @@ if __name__ == "__main__":
     with open(config_name, "r") as stream:
         config = yaml.safe_load(stream)
         config = update_config(config, args)
+        # Ensure rl_games saves tensorboard logs and checkpoints under
+        # navigation_with_obstacles/runs/
+        config["params"]["config"]["train_dir"] = runs_dir
 
         runner = Runner(algo_observer=IsaacAlgoObserver())
         try:

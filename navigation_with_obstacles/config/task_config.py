@@ -44,7 +44,7 @@ class task_config:
     max_yaw_rate = torch.pi / 3  # rad/s (~60 deg/s, symmetric: [-max, +max])
 
     # Episode length
-    episode_len_steps = 200
+    episode_len_steps = 600
 
     return_state_before_reset = False
 

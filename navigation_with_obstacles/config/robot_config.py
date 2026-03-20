@@ -14,9 +14,9 @@ class NavQuadWithCameraCfg(BaseQuadWithCameraCfg):
 
     class init_config(BaseQuadWithCameraCfg.init_config):
         # Spawn position as ratio of environment bounds [x, y, z]
-        # X: 5-15% (near the start/back of the environment)
-        # Y: 30-70% (centered, with some randomization)
-        # Z: 30-70% (centered, with some randomization)
+        # X: 0-5% (pinned to lower X bound)
+        # Y: 10-90% (wide randomization)
+        # Z: 10-90% (wide randomization)
         min_state_ratio = [
             0.00,     # X: at lower X bound
             0.10,     # Y: 10%

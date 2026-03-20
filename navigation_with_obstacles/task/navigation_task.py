@@ -336,8 +336,12 @@ class NavigationWithObstaclesTask(BaseTask):
             dim=1,
         )
 
-        # Reset previous angular velocity for angular acceleration computation
-        self.prev_body_angvel[env_ids] = 0.0
+        # Reset previous angular velocity to current value (avoids spike on first step)
+        self.prev_body_angvel[env_ids] = self.obs_dict["robot_body_angvel"][env_ids].clone()
+
+        # Reset VAE latents so first observation doesn't contain stale encodings
+        if self.image_latents is not None:
+            self.image_latents[env_ids] = 0.0
 
         # Store start positions for debug visualization
         if not self._headless:

@@ -33,7 +33,7 @@ class NavigationObstacleEnvCfg:
         env_spacing = 5.0
 
         # Physics simulation
-        num_physics_steps_per_env_step_mean = 10
+        num_physics_steps_per_env_step_mean = 3
         num_physics_steps_per_env_step_std = 0
 
         # Rendering

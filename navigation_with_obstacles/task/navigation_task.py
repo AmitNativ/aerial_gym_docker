@@ -186,6 +186,7 @@ class NavigationWithObstaclesTask(BaseTask):
             self.sim_env.num_envs, device=self.device, dtype=torch.int32
         )
         self._logged_ep_r_dist = 0.0
+        self._logged_ep_dist_to_target = 0.0
 
         # Termination/truncation tensors
         # IMPORTANT: self.terminations is a SEPARATE tensor, NOT an alias of
@@ -452,6 +453,10 @@ class NavigationWithObstaclesTask(BaseTask):
         self.infos["reward/r_angvel"] = self._reward_comp_sum["r_angvel"] / n
         self.infos["reward/r_perc"] = self._reward_comp_sum["r_perc"] / n
 
+        # Displacement to target (used by multiple metrics below)
+        robot_pos = self.obs_dict["robot_position"]
+        disp = self.target_position - robot_pos
+
         # Episode-end r_dist: mean per-step r_dist averaged over episodes
         # that ended this step (success, crash, exceed, or timeout).
         ended_mask = (self.terminations > 0) | timeout_mask
@@ -462,11 +467,13 @@ class NavigationWithObstaclesTask(BaseTask):
             # Reset accumulators for ended episodes
             self._ep_r_dist_sum[ended_mask] = 0.0
             self._ep_r_dist_steps[ended_mask] = 0
+            self._logged_ep_dist_to_target = float(
+                torch.norm(disp[ended_mask], dim=1).mean()
+            )
         self.infos["reward/r_dist_episode_end"] = self._logged_ep_r_dist
+        self.infos["metrics/dist_to_target_episode_end"] = self._logged_ep_dist_to_target
 
         # Flight metrics (mean across all envs)
-        robot_pos = self.obs_dict["robot_position"]
-        disp = self.target_position - robot_pos
         self.infos["metrics/dist_to_target"] = float(torch.norm(disp, dim=1).mean())
         self.infos["metrics/v_horizontal"] = float(
             torch.norm(self.obs_dict["robot_linvel"][:, :2], dim=1).mean()

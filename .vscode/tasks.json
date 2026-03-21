@@ -150,7 +150,7 @@
                 "-m", "navigation_with_obstacles.training.runner",
                 "--file=navigation_with_obstacles/training/ppo_navigation.yaml",
                 "--play",
-                "--num_envs=64",
+                "--num_envs=1",
                 "--headless=False",
                 "--checkpoint=${input:navCheckpoint}"
             ],

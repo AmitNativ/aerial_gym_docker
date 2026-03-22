@@ -166,14 +166,14 @@ class NavigationWithObstaclesTask(BaseTask):
         self.logged_crash_rate = 0.0
         self.logged_exceed_rate = 0.0
 
-        # Running-average reward components for tensorboard.
+        # EMA reward components for tensorboard (horizon-independent).
         # IsaacAlgoObserver overwrites direct_info each step and only logs the
-        # last step's values, so we accumulate across steps and expose the mean.
-        self._reward_comp_sum = {
+        # last step's values, so we use an EMA to smooth across steps.
+        self._reward_comp_ema = {
             "r_dist": 0.0, "r_speed": 0.0, "r_dir": 0.0,
             "r_angvel": 0.0, "r_perc": 0.0,
         }
-        self._reward_comp_count = 0
+        self._ema_alpha = 0.02  # smooth over ~50 steps
 
         # Per-env r_dist accumulator for episode-end logging.
         # Instead of logging the per-step mean (biased toward mid-flight),
@@ -389,20 +389,6 @@ class NavigationWithObstaclesTask(BaseTask):
         Returns:
             Tuple of (observations, rewards, terminations, truncations, infos)
         """
-        # Reset reward component accumulators at the start of each rollout.
-        # rl_games' IsaacAlgoObserver overwrites direct_info every step and only
-        # logs the final step, so we accumulate a running average across the
-        # rollout. Reset here using a simple step counter; horizon_length is read
-        # once from the yaml config (default 64).
-        if not hasattr(self, "_rollout_step"):
-            self._rollout_step = 0
-            self._horizon_length = 64  # matches ppo_navigation.yaml
-        if self._rollout_step >= self._horizon_length:
-            self._reward_comp_sum = {k: 0.0 for k in self._reward_comp_sum}
-            self._reward_comp_count = 0
-            self._rollout_step = 0
-        self._rollout_step += 1
-
         # Transform network outputs to controller commands
         transformed_action = self.action_transformation_function(actions)
 
@@ -445,13 +431,12 @@ class NavigationWithObstaclesTask(BaseTask):
         self.infos["crash_rate"] = self.logged_crash_rate
         self.infos["exceed_rate"] = self.logged_exceed_rate
 
-        # Reward components (running average across steps within rollout)
-        n = max(self._reward_comp_count, 1)
-        self.infos["reward/r_dist"] = self._reward_comp_sum["r_dist"] / n
-        self.infos["reward/r_speed"] = self._reward_comp_sum["r_speed"] / n
-        self.infos["reward/r_dir"] = self._reward_comp_sum["r_dir"] / n
-        self.infos["reward/r_angvel"] = self._reward_comp_sum["r_angvel"] / n
-        self.infos["reward/r_perc"] = self._reward_comp_sum["r_perc"] / n
+        # Reward components (EMA across steps, horizon-independent)
+        self.infos["reward/r_dist"] = self._reward_comp_ema["r_dist"]
+        self.infos["reward/r_speed"] = self._reward_comp_ema["r_speed"]
+        self.infos["reward/r_dir"] = self._reward_comp_ema["r_dir"]
+        self.infos["reward/r_angvel"] = self._reward_comp_ema["r_angvel"]
+        self.infos["reward/r_perc"] = self._reward_comp_ema["r_perc"]
 
         # Displacement to target (used by multiple metrics below)
         robot_pos = self.obs_dict["robot_position"]
@@ -752,13 +737,13 @@ class NavigationWithObstaclesTask(BaseTask):
             torch.abs(body_linvel[:, 1]) + torch.clamp(-body_linvel[:, 0], min=0.0)
         )
 
-        # Accumulate component means for tensorboard running average
-        self._reward_comp_sum["r_dist"] += float(r_dist.mean())
-        self._reward_comp_sum["r_speed"] += float(r_speed.mean())
-        self._reward_comp_sum["r_dir"] += float(r_dir.mean())
-        self._reward_comp_sum["r_angvel"] += float(r_angvel.mean())
-        self._reward_comp_sum["r_perc"] += float(r_perc.mean())
-        self._reward_comp_count += 1
+        # Update EMA for tensorboard reward component logging
+        a = self._ema_alpha
+        self._reward_comp_ema["r_dist"] += a * (float(r_dist.mean()) - self._reward_comp_ema["r_dist"])
+        self._reward_comp_ema["r_speed"] += a * (float(r_speed.mean()) - self._reward_comp_ema["r_speed"])
+        self._reward_comp_ema["r_dir"] += a * (float(r_dir.mean()) - self._reward_comp_ema["r_dir"])
+        self._reward_comp_ema["r_angvel"] += a * (float(r_angvel.mean()) - self._reward_comp_ema["r_angvel"])
+        self._reward_comp_ema["r_perc"] += a * (float(r_perc.mean()) - self._reward_comp_ema["r_perc"])
 
         # Accumulate r_dist per env for episode-end logging
         self._ep_r_dist_sum[mask] += r_dist

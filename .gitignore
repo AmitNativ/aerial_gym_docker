@@ -1,4 +1,5 @@
 *.tar.gz
 isaacgym/
 .claude/
-__pycache__/ 
+__pycache__/
+slurm/.env

@@ -26,9 +26,9 @@
 set -euo pipefail
 
 # --- Configuration (override via environment variables) ---
-CONTAINER_IMAGE="${CONTAINER_IMAGE:-aerial-gym:latest}"
+CONTAINER_IMAGE="${CONTAINER_IMAGE:-${HOME}/DOCKER_IMAGES/aerial-gym.sqsh}"
 NUM_ENVS="${NUM_ENVS:-8192}"
-MAX_EPOCHS="${MAX_EPOCHS:-2000}"
+MAX_EPOCHS="${MAX_EPOCHS:-1000}"
 EXPERIMENT="${EXPERIMENT:-nav_vae_cluster}"
 CONFIG_FILE="${CONFIG_FILE:-navigation_with_obstacles/training/ppo_navigation_cluster.yaml}"
 
@@ -68,7 +68,6 @@ srun \
     --container-image="${CONTAINER_IMAGE}" \
     --container-mounts="${REPO_DIR}:/workspaces/aerial_gym_docker,${REPO_DIR}/outputs:/workspace/aerial_gym_simulator/outputs,${REPO_DIR}/logs:/workspace/aerial_gym_simulator/logs" \
     --container-workdir=/workspaces/aerial_gym_docker \
-    --container-env=WANDB_API_KEY \
     bash -c "
         echo 'Container started, Python: \$(python --version)'
         echo 'Isaac Gym check...'

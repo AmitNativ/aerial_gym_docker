@@ -26,7 +26,7 @@
 set -euo pipefail
 
 # --- Configuration (override via environment variables) ---
-CONTAINER_IMAGE="${CONTAINER_IMAGE:-aerial-gym:latest}"
+CONTAINER_IMAGE="${CONTAINER_IMAGE:-${HOME}/DOCKER_IMAGES/aerial-gym.sqsh}"
 NUM_ENVS="${NUM_ENVS:-8192}"
 MAX_EPOCHS="${MAX_EPOCHS:-2000}"
 EXPERIMENT="${EXPERIMENT:-nav_vae_cluster}"

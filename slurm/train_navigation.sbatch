@@ -3,7 +3,6 @@
 #SBATCH --partition=dlc
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=64G
 #SBATCH --time=24:00:00
 #SBATCH --output=slurm_logs/nav-vae_%j.out
 #SBATCH --error=slurm_logs/nav-vae_%j.err
@@ -27,17 +26,15 @@ set -euo pipefail
 
 # --- Configuration (override via environment variables) ---
 CONTAINER_IMAGE="${CONTAINER_IMAGE:-${HOME}/DOCKER_IMAGES/aerial-gym.sqsh}"
-NUM_ENVS="${NUM_ENVS:-8192}"
+NUM_ENVS="${NUM_ENVS:-4096}"
 MAX_EPOCHS="${MAX_EPOCHS:-2000}"
 EXPERIMENT="${EXPERIMENT:-nav_vae_cluster}"
 CONFIG_FILE="${CONFIG_FILE:-navigation_with_obstacles/training/ppo_navigation_cluster.yaml}"
 
 # --- Paths ---
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# SLURM_SUBMIT_DIR is the directory where sbatch was invoked
+REPO_DIR="${SLURM_SUBMIT_DIR}"
 SCRIPT_DIR="${REPO_DIR}/slurm"
-
-# Create log directory
-mkdir -p "${REPO_DIR}/slurm_logs"
 
 # --- Load W&B API key ---
 ENV_FILE="${SCRIPT_DIR}/.env"
@@ -68,7 +65,6 @@ srun \
     --container-image="${CONTAINER_IMAGE}" \
     --container-mounts="${REPO_DIR}:/workspaces/aerial_gym_docker,${REPO_DIR}/outputs:/workspace/aerial_gym_simulator/outputs,${REPO_DIR}/logs:/workspace/aerial_gym_simulator/logs" \
     --container-workdir=/workspaces/aerial_gym_docker \
-    --container-env=WANDB_API_KEY \
     bash -c "
         echo 'Container started, Python: \$(python --version)'
         echo 'Isaac Gym check...'

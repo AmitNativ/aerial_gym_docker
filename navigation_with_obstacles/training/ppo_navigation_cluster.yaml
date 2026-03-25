@@ -59,7 +59,7 @@ params:
 
     # Training params
     save_best_after: 10
-    save_frequency: 100
+    save_frequency: 50
     score_to_win: 100000
     grad_norm: 1.0
     entropy_coef: 0.001

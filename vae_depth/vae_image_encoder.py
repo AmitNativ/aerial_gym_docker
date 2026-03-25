@@ -57,7 +57,7 @@ class DepthVAEImageEncoder:
         Returns:
             [num_envs, latent_dim] latent vectors (mu, deterministic).
         """
-        with torch.no_grad():
+        with torch.no_grad(), torch.cuda.amp.autocast(dtype=torch.float16):
             x = image_tensors
             if x.dim() == 3:
                 x = x.unsqueeze(1)  # [B, 1, H, W]
@@ -76,7 +76,7 @@ class DepthVAEImageEncoder:
             z_params = self.encoder(x)
             mu = z_params[:, : self.latent_dim]
 
-            return mu
+            return mu.float()  # cast back to FP32 for PPO observation buffer
 
     def get_latent_dims_size(self):
         return self.latent_dim

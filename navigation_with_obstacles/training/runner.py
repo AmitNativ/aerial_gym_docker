@@ -235,6 +235,11 @@ def update_config(config, args):
         config["params"]["seed"] = args["seed"]
         config["params"]["config"]["env_config"]["seed"] = args["seed"]
 
+    # Resume from checkpoint
+    if args.get("checkpoint"):
+        config["params"]["load_checkpoint"] = True
+        config["params"]["load_path"] = args["checkpoint"]
+
     # Merge use_vecenv into existing player config (don't overwrite YAML settings)
     player_cfg = config["params"]["config"].get("player", {})
     player_cfg["use_vecenv"] = True

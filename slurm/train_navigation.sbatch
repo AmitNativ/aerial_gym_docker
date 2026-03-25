@@ -2,9 +2,7 @@
 #SBATCH --job-name=nav-vae
 #SBATCH --partition=dlc
 #SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=64G
-#SBATCH --time=24:00:00
+#SBATCH --cpus-per-task=16
 #SBATCH --output=slurm_logs/nav-vae_%j.out
 #SBATCH --error=slurm_logs/nav-vae_%j.err
 
@@ -27,10 +25,11 @@ set -euo pipefail
 
 # --- Configuration (override via environment variables) ---
 CONTAINER_IMAGE="${CONTAINER_IMAGE:-${HOME}/DOCKER_IMAGES/aerial-gym.sqsh}"
-NUM_ENVS="${NUM_ENVS:-8192}"
+NUM_ENVS="${NUM_ENVS:-12288}"
 MAX_EPOCHS="${MAX_EPOCHS:-1000}"
 EXPERIMENT="${EXPERIMENT:-nav_vae_cluster}"
 CONFIG_FILE="${CONFIG_FILE:-navigation_with_obstacles/training/ppo_navigation_cluster.yaml}"
+CHECKPOINT="${CHECKPOINT:-}"  # Path to checkpoint file to resume training (empty = start fresh)
 
 # --- Paths ---
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -50,6 +49,11 @@ else
     echo "WARNING: ${ENV_FILE} not found. W&B tracking will fail unless WANDB_API_KEY is set."
 fi
 
+# --- Performance tuning ---
+export OMP_NUM_THREADS=8
+export MKL_NUM_THREADS=8
+export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
+
 # --- Print job info ---
 echo "============================================="
 echo "Job ID:          ${SLURM_JOB_ID}"
@@ -60,8 +64,15 @@ echo "Num envs:        ${NUM_ENVS}"
 echo "Max epochs:      ${MAX_EPOCHS}"
 echo "Config:          ${CONFIG_FILE}"
 echo "Experiment:      ${EXPERIMENT}"
+echo "Checkpoint:      ${CHECKPOINT:-none (fresh start)}"
 echo "Repo dir:        ${REPO_DIR}"
 echo "============================================="
+
+# --- Build checkpoint argument ---
+CHECKPOINT_ARG=""
+if [[ -n "${CHECKPOINT}" ]]; then
+    CHECKPOINT_ARG="--checkpoint=${CHECKPOINT}"
+fi
 
 # --- Run training inside container via Pyxis ---
 srun \
@@ -80,7 +91,8 @@ srun \
             --train \
             --track \
             --experiment_name=${EXPERIMENT} \
-            --wandb-project-name=aerial_gym
+            --wandb-project-name=aerial_gym \
+            ${CHECKPOINT_ARG}
     "
 
 echo "Training complete. Job ${SLURM_JOB_ID} finished at $(date)"

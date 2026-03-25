@@ -87,6 +87,7 @@ class task_config:
         max_depth_m = 7.0
         min_depth_m = 0.1
         sensor_max_range = 10.0
+        encode_batch_size = 2048  # VAE inference batch size (tuned for A100 40GB)
 
     class curriculum:
         """

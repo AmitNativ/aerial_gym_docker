@@ -488,9 +488,9 @@ class NavigationWithObstaclesTask(BaseTask):
     def process_image_observation(self):
         """Encode depth image through custom DepthVAE to get latent representation."""
         if self.task_config.vae_config.use_vae and self.vae_model is not None:
-            image_obs = self.obs_dict["depth_range_pixels"].squeeze(1)
+            image_obs = self.obs_dict["depth_range_pixels"].squeeze(1).contiguous()
             # Batch VAE encoding to avoid CUDA OOM on large num_envs
-            batch_size = 128
+            batch_size = getattr(self.task_config.vae_config, "encode_batch_size", 2048)
             n = image_obs.shape[0]
             if n <= batch_size:
                 self.image_latents[:] = self.vae_model.encode(image_obs)

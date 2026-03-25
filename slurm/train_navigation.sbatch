@@ -32,11 +32,9 @@ CONFIG_FILE="${CONFIG_FILE:-navigation_with_obstacles/training/ppo_navigation_cl
 CHECKPOINT="${CHECKPOINT:-}"  # Path to checkpoint file to resume training (empty = start fresh)
 
 # --- Paths ---
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# SLURM_SUBMIT_DIR is the directory where sbatch was invoked
+REPO_DIR="${SLURM_SUBMIT_DIR}"
 SCRIPT_DIR="${REPO_DIR}/slurm"
-
-# Create log directory
-mkdir -p "${REPO_DIR}/slurm_logs"
 
 # --- Load W&B API key ---
 ENV_FILE="${SCRIPT_DIR}/.env"

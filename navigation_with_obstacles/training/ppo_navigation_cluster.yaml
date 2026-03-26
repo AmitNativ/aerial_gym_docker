@@ -37,7 +37,7 @@ params:
     name: navigation_with_obstacles
     env_name: navigation_with_obstacles_task
     env_config:
-      num_envs: 12288
+      num_envs: 8192
       headless: True
       use_warp: True
 
@@ -68,9 +68,9 @@ params:
     clip_value: False
 
     # Batch settings (scaled for A100 80GB)
-    num_actors: 12288
+    num_actors: 8192
     horizon_length: 128
-    minibatch_size: 49152
+    minibatch_size: 32768
     mini_epochs: 4
     seq_length: 8
 

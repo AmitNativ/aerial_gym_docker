@@ -2,7 +2,7 @@
 #SBATCH --job-name=nav-vae
 #SBATCH --partition=dlc
 #SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=8
 #SBATCH --output=slurm_logs/nav-vae_%j.out
 #SBATCH --error=slurm_logs/nav-vae_%j.err
 
@@ -25,7 +25,7 @@ set -euo pipefail
 
 # --- Configuration (override via environment variables) ---
 CONTAINER_IMAGE="${CONTAINER_IMAGE:-${HOME}/DOCKER_IMAGES/aerial-gym.sqsh}"
-NUM_ENVS="${NUM_ENVS:-10240}"
+NUM_ENVS="${NUM_ENVS:-8192}"
 MAX_EPOCHS="${MAX_EPOCHS:-1000}"
 EXPERIMENT="${EXPERIMENT:-nav_vae_cluster}"
 CONFIG_FILE="${CONFIG_FILE:-navigation_with_obstacles/training/ppo_navigation_cluster.yaml}"
@@ -46,10 +46,6 @@ if [[ -f "${ENV_FILE}" ]]; then
 else
     echo "WARNING: ${ENV_FILE} not found. W&B tracking will fail unless WANDB_API_KEY is set."
 fi
-
-# --- Performance tuning ---
-export OMP_NUM_THREADS=8
-export MKL_NUM_THREADS=8
 
 # --- Print job info ---
 echo "============================================="

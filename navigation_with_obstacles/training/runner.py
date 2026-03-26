@@ -230,6 +230,10 @@ def update_config(config, args):
     if args["num_envs"] > 0:
         config["params"]["config"]["num_actors"] = args["num_envs"]
         config["params"]["config"]["env_config"]["num_envs"] = args["num_envs"]
+        # Clamp minibatch_size to batch_size so rl_games assertion passes
+        batch_size = args["num_envs"] * config["params"]["config"]["horizon_length"]
+        if config["params"]["config"]["minibatch_size"] > batch_size:
+            config["params"]["config"]["minibatch_size"] = batch_size
 
     if args["seed"] > 0:
         config["params"]["seed"] = args["seed"]

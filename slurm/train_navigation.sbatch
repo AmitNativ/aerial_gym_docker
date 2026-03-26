@@ -50,7 +50,6 @@ fi
 # --- Performance tuning ---
 export OMP_NUM_THREADS=8
 export MKL_NUM_THREADS=8
-export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
 
 # --- Print job info ---
 echo "============================================="

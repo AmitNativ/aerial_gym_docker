@@ -87,7 +87,7 @@ class task_config:
         max_depth_m = 7.0
         min_depth_m = 0.1
         sensor_max_range = 10.0
-        encode_batch_size = 2048  # VAE inference batch size (tuned for A100 40GB)
+        encode_batch_size = 4096  # VAE inference batch size — single batch on A100 40GB
 
     class curriculum:
         """
@@ -97,8 +97,8 @@ class task_config:
         """
         min_level = 0
         max_level = 25
-        check_after_log_instances = 2048
-        increase_step = 2
+        check_after_log_instances = 65536  # scaled for cluster: ~16 epochs/check (was 8192 → ~2 epochs/check)
+        increase_step = 1                  # slower progression, no double-jumps (was 2)
         decrease_step = 1
         success_rate_for_increase = 0.7
         success_rate_for_decrease = 0.6

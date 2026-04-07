@@ -51,10 +51,9 @@ params:
     tau: 0.95
     ppo: True
 
-    # Learning rate (scaled up with larger batch)
-    learning_rate: 3e-4
+    learning_rate: 1e-4
     lr_schedule: adaptive
-    kl_threshold: 0.016
+    kl_threshold: 0.016  # relaxed to match local config (was 0.008 — was suppressing LR unnecessarily)
     min_lr: 1e-6
 
     # Training params
@@ -69,9 +68,9 @@ params:
 
     # Batch settings (scaled for A100 40GB)
     num_actors: 4096
-    horizon_length: 128
-    minibatch_size: 16384
-    mini_epochs: 4
+    horizon_length: 64
+    minibatch_size: 32768  # larger batches → fewer passes per rollout (was 16384)
+    mini_epochs: 4         # matches local config, halves gradient updates per rollout (was 8)
     seq_length: 8
 
     # Value function

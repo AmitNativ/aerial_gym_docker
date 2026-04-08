@@ -31,9 +31,9 @@ class task_config:
     headless = True
     device = "cuda:0"
 
-    # Observation space: 14 (state) + 32 (VAE latents) = 46
-    # State: [log_d_hor(1), d_z(1), d_norm(3), vel_w(3), angular_vel_b(3), angular_acc_b(3)]
-    observation_space_dim = 14 + 32
+    # Observation space: 12 (state) + 32 (VAE latents) = 44
+    
+    observation_space_dim = 12 + 32
     privileged_observation_space_dim = 0
 
     # Action space: [accel_x, accel_y, accel_z, yaw_rate]
@@ -56,20 +56,23 @@ class task_config:
     # Reward parameters
     reward_parameters = {
         # Terminal rewards
-        "exceed_penalty": -100.0,     # out-of-bounds termination
-        "arrive_bonus": 100.0,        # reached target (success)
-        "collision_penalty": -100.0,  # obstacle collision termination
-        "d_min": 1.0,                 # arrival distance threshold (meters)
+        "arrive_bonus_min": 2.0,        # arrival reward at curriculum level 0 (easy)
+        "arrive_bonus_max": 7.0,        # arrival reward at max curriculum level (hard)
+        "collision_penalty": -10.0,     # obstacle collision termination
+        "exceed_penalty": -2.0,         # out-of-bounds termination
+        "timeout_penalty": -10.0,          # episode timeout termination
+        "d_min": 0.4,                   # arrival distance threshold (meters)
         # Progress reward (dense shaping, all lambda < 0)
-        "lambda_d": -0.005,           # distance to target (horizontal + vertical)
-        "lambda_v": -0.005,           # excessive horizontal speed penalty
-        "lambda_dir": -0.003,         # velocity-goal direction misalignment
-        "lambda_input": -0.0025,      # angular velocity penalty (attitude stability)
-        "lambda_perc": -0.005,        # perception: discourage lateral/backward flight
+        "lambda_d": -0.001,           # distance to target (horizontal + vertical)
+        "lambda_dz": -0.001,          # vertical distance to target (encourage altitude adjustments)
+        "lambda_v": -0.001,         # velocity-goal direction misalignment
+        "lambda_bearing": -0.001,           # projection of velocity onto target direction (encourage movement towards target)
+        "lambda_path_deviation": -0.0005,    # velocity misalignment with target direction (encourage movement towards target)
+        "lambda_jerk": -0.001,      # jerk penalty to encourage smooth control
     }
 
     # Speed threshold for excess speed penalty (m/s)
-    v_max = 3.0
+    v_max = 5.0
 
     class vae_config:
         """Custom 32D DepthVAE configuration."""
@@ -97,7 +100,7 @@ class task_config:
         """
         min_level = 0
         max_level = 25
-        check_after_log_instances = 65536  # scaled for cluster: ~16 epochs/check (was 8192 → ~2 epochs/check)
+        check_after_num_rollouts = 16  # curriculum check every N rollouts (instances = num_rollouts * num_envs)
         increase_step = 1                  # slower progression, no double-jumps (was 2)
         decrease_step = 1
         success_rate_for_increase = 0.7

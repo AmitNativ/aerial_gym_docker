@@ -43,11 +43,11 @@ params:
 
     # Reward scaling
     reward_shaper:
-      scale_value: 0.1
+      scale_value: 1.0
 
     # PPO settings
     normalize_advantage: True
-    gamma: 0.98
+    gamma: 0.99
     tau: 0.95
     ppo: True
 
@@ -68,7 +68,7 @@ params:
     clip_value: False
 
     # Batch settings
-    num_actors: 512
+    num_actors: 1024
     horizon_length: 64
     minibatch_size: 4096
     mini_epochs: 4

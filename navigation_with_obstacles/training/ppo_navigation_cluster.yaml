@@ -43,11 +43,11 @@ params:
 
     # Reward scaling
     reward_shaper:
-      scale_value: 0.1
+      scale_value: 1.0
 
     # PPO settings
     normalize_advantage: True
-    gamma: 0.98
+    gamma: 0.99
     tau: 0.95
     ppo: True
 

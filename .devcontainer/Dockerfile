@@ -1,12 +1,7 @@
 # Devcontainer Dockerfile
 # Builds on top of the pre-built aerial-gym image and adds dev dependencies
 
-FROM localhost:5000/aerial-gym:latest
-
-# Install dev dependencies
-RUN pip install \
-    loguru \
-    snntorch
+FROM aerial-gym:base
 
 # Create non-root user matching host UID/GID
 ARG USERNAME=devuser

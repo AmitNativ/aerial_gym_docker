@@ -75,5 +75,5 @@ class TargetHoldQuadCfg(BaseQuadWithCameraImuCfg):
     class sensor_config(BaseQuadWithCameraImuCfg.sensor_config):
         enable_camera = True
         camera_config = TargetHoldCameraCfg
-        enable_imu = True
+        enable_imu = False  # using ground-truth state from simulator, not IMU
         imu_config = TargetHoldImuCfg
